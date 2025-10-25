@@ -128,6 +128,8 @@ public class KeyServer {
                 String name = new String(nameBytes, StandardCharsets.US_ASCII);
                 logger.info("Received name '" + name + "' from " + sc.getRemoteAddress());
                 handleNameForClient(name, sc);
+                ctx.nameBytes.clear();
+                buf.clear();
                 return;
             } else {
                 ctx.nameBytes.add(b);
@@ -144,8 +146,7 @@ public class KeyServer {
     private void closeKeyChannel(SelectionKey key) {
         try {
             key.channel().close();
-        } catch (IOException ignore) {
-        }
+        } catch (IOException ignore) {}
         key.cancel();
     }
 
@@ -334,8 +335,7 @@ public class KeyServer {
             } finally {
                 try {
                     sel.close();
-                } catch (IOException ignore) {
-                }
+                } catch (IOException ignore) {}
             }
         }
 
