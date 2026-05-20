@@ -1,6 +1,7 @@
 package org.example;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 
 public class Main {
     public static void main(String[] args) {
@@ -47,7 +48,7 @@ public class Main {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new RuntimeException("Не удалось обработать XML", e);
         }
     }
 }

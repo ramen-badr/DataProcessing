@@ -2,24 +2,24 @@ package org.example;
 
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.Marshaller;
-import org.example.jaxb.ChildReference;
-import org.example.jaxb.People;
-import org.example.jaxb.PersonRecord;
-import org.example.jaxb.PersonReference;
-import org.example.jaxb.Siblings;
+import org.example.jaxb.*;
 
 import javax.xml.XMLConstants;
-import javax.xml.stream.*;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamConstants;
+import javax.xml.stream.XMLStreamReader;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.net.URL;
 import java.util.*;
 import java.util.regex.Pattern;
 
 public class XMLParser {
-    private Map<String, Person> persons = new HashMap<>();
-    private List<String> validationIssues = new ArrayList<>();
+    private final Map<String, Person> persons = new HashMap<>();
+    private final List<String> validationIssues = new ArrayList<>();
     private static final Pattern XML_ID_PATTERN = Pattern.compile("[A-Za-z_][A-Za-z0-9_.-]*");
 
     public void parse(String filePath) throws Exception {
@@ -31,10 +31,11 @@ public class XMLParser {
 
         while (reader.hasNext()) {
             int event = reader.next();
+            String elementName;
 
             switch (event) {
                 case XMLStreamConstants.START_ELEMENT:
-                    String elementName = reader.getLocalName();
+                    elementName = reader.getLocalName();
 
                     if ("person".equals(elementName)) {
                         currentPerson = new Person();

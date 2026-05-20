@@ -25,8 +25,8 @@
     </xs:complexType>
 
     <xs:complexType name="PersonRefType">
-        <xs:attribute name="ref" type="xs:IDREF" use="optional"/>
-        <xs:attribute name="name" type="xs:string" use="optional"/>
+        <xs:attribute name="ref" type="xs:IDREF"/>
+        <xs:attribute name="name" type="xs:string"/>
     </xs:complexType>
 
     <xs:complexType name="ParentsType">
@@ -44,8 +44,8 @@
     </xs:simpleType>
 
     <xs:complexType name="ChildRefType">
-        <xs:attribute name="ref" type="xs:IDREF" use="optional"/>
-        <xs:attribute name="name" type="xs:string" use="optional"/>
+        <xs:attribute name="ref" type="xs:IDREF"/>
+        <xs:attribute name="name" type="xs:string"/>
         <xs:attribute name="type" type="ChildType" use="required"/>
     </xs:complexType>
 

@@ -1,6 +1,7 @@
 package org.example;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Person {
     private String id;
@@ -19,7 +20,8 @@ public class Person {
     private Integer siblingsNumber;
 
     // Конструкторы, геттеры и сеттеры
-    public Person() {}
+    public Person() {
+    }
 
     public Person(String id) {
         this.id = id;
@@ -80,39 +82,99 @@ public class Person {
     }
 
     // Геттеры и сеттеры
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
+    public String getId() {
+        return id;
+    }
 
-    public String getFirstName() { return firstName; }
-    public void setFirstName(String firstName) { this.firstName = firstName; }
+    public void setId(String id) {
+        this.id = id;
+    }
 
-    public String getLastName() { return lastName; }
-    public void setLastName(String lastName) { this.lastName = lastName; }
+    public String getFirstName() {
+        return firstName;
+    }
 
-    public String getGender() { return gender; }
-    public void setGender(String gender) { this.gender = gender; }
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
 
-    public String getSpouse() { return spouse; }
-    public void setSpouse(String spouse) { this.spouse = spouse; }
+    public String getLastName() {
+        return lastName;
+    }
 
-    public List<String> getParents() { return parents; }
-    public void setParents(List<String> parents) { this.parents = parents; }
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
 
-    public List<Child> getChildren() { return children; }
-    public void setChildren(List<Child> children) { this.children = children; }
+    public String getGender() {
+        return gender;
+    }
 
-    public List<String> getSiblings() { return siblings; }
-    public void setSiblings(List<String> siblings) { this.siblings = siblings; }
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
 
-    public List<String> getBrothers() { return brothers; }
-    public void setBrothers(List<String> brothers) { this.brothers = brothers; }
+    public String getSpouse() {
+        return spouse;
+    }
 
-    public List<String> getSisters() { return sisters; }
-    public void setSisters(List<String> sisters) { this.sisters = sisters; }
+    public void setSpouse(String spouse) {
+        this.spouse = spouse;
+    }
 
-    public Integer getChildrenNumber() { return childrenNumber; }
-    public void setChildrenNumber(Integer childrenNumber) { this.childrenNumber = childrenNumber; }
+    public List<String> getParents() {
+        return parents;
+    }
 
-    public Integer getSiblingsNumber() { return siblingsNumber; }
-    public void setSiblingsNumber(Integer siblingsNumber) { this.siblingsNumber = siblingsNumber; }
+    public void setParents(List<String> parents) {
+        this.parents = parents;
+    }
+
+    public List<Child> getChildren() {
+        return children;
+    }
+
+    public void setChildren(List<Child> children) {
+        this.children = children;
+    }
+
+    public List<String> getSiblings() {
+        return siblings;
+    }
+
+    public void setSiblings(List<String> siblings) {
+        this.siblings = siblings;
+    }
+
+    public List<String> getBrothers() {
+        return brothers;
+    }
+
+    public void setBrothers(List<String> brothers) {
+        this.brothers = brothers;
+    }
+
+    public List<String> getSisters() {
+        return sisters;
+    }
+
+    public void setSisters(List<String> sisters) {
+        this.sisters = sisters;
+    }
+
+    public Integer getChildrenNumber() {
+        return childrenNumber;
+    }
+
+    public void setChildrenNumber(Integer childrenNumber) {
+        this.childrenNumber = childrenNumber;
+    }
+
+    public Integer getSiblingsNumber() {
+        return siblingsNumber;
+    }
+
+    public void setSiblingsNumber(Integer siblingsNumber) {
+        this.siblingsNumber = siblingsNumber;
+    }
 }
