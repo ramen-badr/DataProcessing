@@ -107,3 +107,55 @@
 - **1–19**: JAXB-поля для братьев/сестёр/общих.
 - **21–22**: конструктор.
 - **24–45**: геттеры и сеттеры.
+
+### ER-диаграмма (X2)
+
+```mermaid
+erDiagram
+    PEOPLE ||--o{ PERSON : contains
+    PEOPLE {
+        xs:int count
+    }
+
+    PERSON ||--o| PERSON_REF : spouse
+    PERSON ||--o{ PERSON_REF : parent
+    PERSON ||--o{ CHILD_REF : child
+    PERSON ||--o{ PERSON_REF : brother
+    PERSON ||--o{ PERSON_REF : sister
+    PERSON ||--o{ PERSON_REF : sibling
+
+    PERSON {
+        xs:ID id PK
+        xs:string firstname
+        xs:string lastname
+        xs:string gender
+        xs:int children_number
+        xs:int siblings_number
+    }
+
+    PERSON_REF {
+        xs:IDREF ref
+        xs:string name
+    }
+
+    CHILD_REF {
+        xs:IDREF ref
+        xs:string name
+        enum(child|son|daughter) type
+    }
+
+    PERSON_REF o|--|| PERSON : ref
+    CHILD_REF o|--|| PERSON : ref
+```
+
+**Ограничения и кардинальности:**
+- `people.count` — обязательный атрибут.
+- `person.id` — обязательный `xs:ID` (уникальный в документе).
+- `spouse` — 0..1 ссылка на человека.
+- `parents/parent` — 0..* ссылок.
+- `children/child` — 0..* ссылок, `type` обязателен и ограничен `child|son|daughter`.
+- `siblings` включает отдельные множества `brother/sister/sibling` (каждое 0..*).
+- Каждая ссылка (`PersonRef`) хранит либо `ref` (`xs:IDREF`), либо `name` (оба поля опциональны по XSD).
+
+### Изменения
+- Добавлена ER-диаграмма X2 и перечень ограничений схемы.
