@@ -1,12 +1,26 @@
 package org.example;
 
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.Marshaller;
+import org.example.jaxb.ChildReference;
+import org.example.jaxb.People;
+import org.example.jaxb.PersonRecord;
+import org.example.jaxb.PersonReference;
+import org.example.jaxb.Siblings;
+
+import javax.xml.XMLConstants;
 import javax.xml.stream.*;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
 import java.io.*;
+import java.net.URL;
 import java.util.*;
+import java.util.regex.Pattern;
 
 public class XMLParser {
     private Map<String, Person> persons = new HashMap<>();
     private List<String> validationIssues = new ArrayList<>();
+    private static final Pattern XML_ID_PATTERN = Pattern.compile("[A-Za-z_][A-Za-z0-9_.-]*");
 
     public void parse(String filePath) throws Exception {
         XMLInputFactory factory = XMLInputFactory.newInstance();
@@ -87,6 +101,28 @@ public class XMLParser {
                         if (!siblingId.isEmpty()) {
                             person.addSibling(siblingId);
                         }
+                    }
+                }
+                break;
+
+            case "children-number":
+                String childrenNumberValue = reader.getAttributeValue(null, "value");
+                if (childrenNumberValue != null) {
+                    try {
+                        person.setChildrenNumber(Integer.parseInt(childrenNumberValue.trim()));
+                    } catch (NumberFormatException e) {
+                        // Игнорируем некорректные числа
+                    }
+                }
+                break;
+
+            case "siblings-number":
+                String siblingsNumberValue = reader.getAttributeValue(null, "value");
+                if (siblingsNumberValue != null) {
+                    try {
+                        person.setSiblingsNumber(Integer.parseInt(siblingsNumberValue.trim()));
+                    } catch (NumberFormatException e) {
+                        // Игнорируем некорректные числа
                     }
                 }
                 break;
@@ -314,126 +350,12 @@ public class XMLParser {
     }
 
     public void writeUnifiedXML(String outputPath) throws Exception {
-        XMLOutputFactory factory = XMLOutputFactory.newInstance();
-        XMLStreamWriter writer = factory.createXMLStreamWriter(
-                new FileWriter(outputPath));
-
-        writer.writeStartDocument("UTF-8", "1.0");
-        writer.writeStartElement("people");
-        writer.writeAttribute("count", String.valueOf(persons.size()));
-
-        for (Person person : persons.values()) {
-            writer.writeStartElement("person");
-
-            if (person.getId() != null && !person.getId().isEmpty()) {
-                writer.writeAttribute("id", person.getId());
-            }
-
-            // Основная информация
-            if (person.getFirstName() != null && !person.getFirstName().isEmpty()) {
-                writer.writeStartElement("firstname");
-                writer.writeCharacters(person.getFirstName());
-                writer.writeEndElement();
-            }
-
-            if (person.getLastName() != null && !person.getLastName().isEmpty()) {
-                writer.writeStartElement("lastname");
-                writer.writeCharacters(person.getLastName());
-                writer.writeEndElement();
-            }
-
-            if (person.getGender() != null && !person.getGender().isEmpty()) {
-                writer.writeStartElement("gender");
-                writer.writeCharacters(person.getGender());
-                writer.writeEndElement();
-            }
-
-            if (person.getSpouse() != null && !person.getSpouse().isEmpty()) {
-                writer.writeStartElement("spouse");
-                writer.writeCharacters(person.getSpouse());
-                writer.writeEndElement();
-            }
-
-            // Родители
-            if (!person.getParents().isEmpty()) {
-                writer.writeStartElement("parents");
-                for (String parent : person.getParents()) {
-                    writer.writeStartElement("parent");
-                    writer.writeCharacters(parent);
-                    writer.writeEndElement();
-                }
-                writer.writeEndElement();
-            }
-
-            // Дети (структурированные)
-            if (!person.getChildren().isEmpty()) {
-                writer.writeStartElement("children");
-
-                for (Child child : person.getChildren()) {
-                    writer.writeStartElement("child");
-
-                    if (child.getType() != null) {
-                        writer.writeAttribute("type", child.getType());
-                    }
-
-                    if (child.getId() != null && !child.getId().isEmpty()) {
-                        writer.writeAttribute("id", child.getId());
-                    }
-
-                    if (child.getName() != null && !child.getName().isEmpty()) {
-                        writer.writeCharacters(child.getName());
-                    }
-
-                    writer.writeEndElement();
-                }
-
-                writer.writeEndElement();
-            }
-
-            // Братья и сестры (структурированные)
-            if (!person.getBrothers().isEmpty() || !person.getSisters().isEmpty() || !person.getSiblings().isEmpty()) {
-                writer.writeStartElement("siblings");
-
-                for (String brother : person.getBrothers()) {
-                    writer.writeStartElement("brother");
-                    writer.writeCharacters(brother);
-                    writer.writeEndElement();
-                }
-
-                for (String sister : person.getSisters()) {
-                    writer.writeStartElement("sister");
-                    writer.writeCharacters(sister);
-                    writer.writeEndElement();
-                }
-
-                for (String sibling : person.getSiblings()) {
-                    writer.writeStartElement("sibling");
-                    writer.writeCharacters(sibling);
-                    writer.writeEndElement();
-                }
-
-                writer.writeEndElement();
-            }
-
-            // Вспомогательная информация
-            if (person.getChildrenNumber() != null) {
-                writer.writeStartElement("children-number");
-                writer.writeCharacters(String.valueOf(person.getChildrenNumber()));
-                writer.writeEndElement();
-            }
-
-            if (person.getSiblingsNumber() != null) {
-                writer.writeStartElement("siblings-number");
-                writer.writeCharacters(String.valueOf(person.getSiblingsNumber()));
-                writer.writeEndElement();
-            }
-
-            writer.writeEndElement(); // закрываем person
-        }
-
-        writer.writeEndElement(); // закрываем people
-        writer.writeEndDocument();
-        writer.close();
+        People people = buildPeopleModel();
+        JAXBContext context = JAXBContext.newInstance(People.class);
+        Marshaller marshaller = context.createMarshaller();
+        marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+        marshaller.setSchema(loadSchema());
+        marshaller.marshal(people, new File(outputPath));
     }
 
     public Map<String, Person> getPersons() {
@@ -442,5 +364,179 @@ public class XMLParser {
 
     public List<String> getValidationIssues() {
         return validationIssues;
+    }
+
+    private Schema loadSchema() throws Exception {
+        SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+        URL schemaUrl = XMLParser.class.getClassLoader().getResource("people.xsd");
+        if (schemaUrl == null) {
+            throw new FileNotFoundException("people.xsd not found in resources");
+        }
+        return schemaFactory.newSchema(schemaUrl);
+    }
+
+    private People buildPeopleModel() {
+        Map<Person, PersonRecord> recordByPerson = new HashMap<>();
+        Map<String, PersonRecord> recordById = new HashMap<>();
+        Map<String, PersonRecord> recordByName = new HashMap<>();
+        Set<String> usedIds = new HashSet<>();
+        List<PersonRecord> records = new ArrayList<>();
+        int index = 1;
+
+        for (Person person : persons.values()) {
+            String rawId = trimToNull(person.getId());
+            String xmlId = normalizeXmlId(rawId, index++, usedIds);
+            PersonRecord record = new PersonRecord();
+            record.setId(xmlId);
+            record.setFirstName(trimToNull(person.getFirstName()));
+            record.setLastName(trimToNull(person.getLastName()));
+            record.setGender(trimToNull(person.getGender()));
+            record.setChildrenNumber(person.getChildrenNumber());
+            record.setSiblingsNumber(person.getSiblingsNumber());
+
+            records.add(record);
+            recordByPerson.put(person, record);
+            if (rawId != null) {
+                recordById.put(rawId, record);
+            }
+
+            String fullName = buildFullName(person);
+            if (!fullName.isEmpty()) {
+                recordByName.put(fullName, record);
+            }
+        }
+
+        for (Person person : persons.values()) {
+            PersonRecord record = recordByPerson.get(person);
+            record.setSpouse(buildReference(person.getSpouse(), recordById, recordByName));
+
+            List<PersonReference> parents = buildReferences(person.getParents(), recordById, recordByName);
+            if (!parents.isEmpty()) {
+                record.setParents(parents);
+            }
+
+            List<ChildReference> children = buildChildReferences(person.getChildren(), recordById, recordByName);
+            if (!children.isEmpty()) {
+                record.setChildren(children);
+            }
+
+            Siblings siblings = buildSiblings(person, recordById, recordByName);
+            if (siblings != null) {
+                record.setSiblings(siblings);
+            }
+        }
+
+        People people = new People();
+        people.setPersons(records);
+        return people;
+    }
+
+    private String buildFullName(Person person) {
+        String firstName = trimToNull(person.getFirstName());
+        String lastName = trimToNull(person.getLastName());
+        if (firstName == null && lastName == null) {
+            return "";
+        }
+        if (firstName == null) {
+            return lastName;
+        }
+        if (lastName == null) {
+            return firstName;
+        }
+        return firstName + " " + lastName;
+    }
+
+    private PersonReference buildReference(String value, Map<String, PersonRecord> recordById,
+                                           Map<String, PersonRecord> recordByName) {
+        String trimmed = trimToNull(value);
+        if (trimmed == null) {
+            return null;
+        }
+        PersonRecord ref = recordById.get(trimmed);
+        if (ref == null) {
+            ref = recordByName.get(trimmed);
+        }
+        PersonReference reference = new PersonReference();
+        if (ref != null) {
+            reference.setRef(ref);
+        } else {
+            reference.setName(trimmed);
+        }
+        return reference;
+    }
+
+    private List<PersonReference> buildReferences(List<String> values, Map<String, PersonRecord> recordById,
+                                                  Map<String, PersonRecord> recordByName) {
+        List<PersonReference> references = new ArrayList<>();
+        for (String value : values) {
+            PersonReference reference = buildReference(value, recordById, recordByName);
+            if (reference != null) {
+                references.add(reference);
+            }
+        }
+        return references;
+    }
+
+    private List<ChildReference> buildChildReferences(List<Child> children, Map<String, PersonRecord> recordById,
+                                                      Map<String, PersonRecord> recordByName) {
+        List<ChildReference> references = new ArrayList<>();
+        for (Child child : children) {
+            ChildReference reference = new ChildReference();
+            reference.setType(trimToNull(child.getType()) == null ? "child" : trimToNull(child.getType()));
+
+            String childId = trimToNull(child.getId());
+            String childName = trimToNull(child.getName());
+            PersonRecord ref = null;
+            if (childId != null) {
+                ref = recordById.get(childId);
+            }
+            if (ref == null && childName != null) {
+                ref = recordByName.get(childName);
+            }
+            if (ref != null) {
+                reference.setRef(ref);
+            } else if (childName != null) {
+                reference.setName(childName);
+            } else if (childId != null) {
+                reference.setName(childId);
+            }
+            references.add(reference);
+        }
+        return references;
+    }
+
+    private Siblings buildSiblings(Person person, Map<String, PersonRecord> recordById,
+                                   Map<String, PersonRecord> recordByName) {
+        List<PersonReference> brothers = buildReferences(person.getBrothers(), recordById, recordByName);
+        List<PersonReference> sisters = buildReferences(person.getSisters(), recordById, recordByName);
+        List<PersonReference> siblings = buildReferences(person.getSiblings(), recordById, recordByName);
+        if (brothers.isEmpty() && sisters.isEmpty() && siblings.isEmpty()) {
+            return null;
+        }
+        Siblings siblingsGroup = new Siblings();
+        siblingsGroup.setBrothers(brothers);
+        siblingsGroup.setSisters(sisters);
+        siblingsGroup.setSiblings(siblings);
+        return siblingsGroup;
+    }
+
+    private String trimToNull(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private String normalizeXmlId(String rawId, int index, Set<String> usedIds) {
+        String candidate = rawId != null ? rawId.trim() : "";
+        if (candidate.isEmpty() || !XML_ID_PATTERN.matcher(candidate).matches()) {
+            candidate = "P" + index;
+        }
+        while (usedIds.contains(candidate)) {
+            candidate = candidate + "_" + index;
+        }
+        usedIds.add(candidate);
+        return candidate;
     }
 }

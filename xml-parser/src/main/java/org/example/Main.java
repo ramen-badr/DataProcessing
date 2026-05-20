@@ -27,10 +27,10 @@ public class Main {
             }
 
             // Запись объединенного XML
-            System.out.println("\nЗапись объединенного XML...");
+            System.out.println("\nЗапись объединенного XML (JAXB + XSD)...");
             parser.writeUnifiedXML("unified_people.xml");
 
-            System.out.println("Готово! Результат записан в unified_people.xml");
+            System.out.println("Готово! Результат записан в unified_people.xml (schema: people.xsd)");
 
             // Пример вывода информации о нескольких людях
             System.out.println("\nПример информации о людях:");
